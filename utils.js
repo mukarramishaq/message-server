@@ -49,10 +49,52 @@ const createErrorMessage = (message, error) => {
 }
 
 
+/**
+ * Place a proper check and balance on each
+ * connection and destroy the broken connections\
+ * @param {WebSocket.Server}
+ */
+const cleanupConnections = (wss) => {
+    /**
+     * mark every new connection an alive flag
+     * and register pong listener to mark it alive again
+     */
+    wss.on('connection', (ws) => {
+        ws.isAlive = true;
+        ws.on('pong', () => {
+            debug("Connection is alive");
+            ws.isAlive = true; // yes connection is alive and mark it alive
+        });
+    });
+
+    /**
+     * create an interval to constanctly check
+     * for connections health
+     */
+    const interval = setInterval(() => {
+        debug("Checking for connections health...");
+        wss.clients.forEach((ws) => {
+            if (ws.isAlive === false) return ws.terminate();
+            ws.isAlive = false; // temporarily mark it dead
+            ws.ping(() => { }); // now send a ping to check the connection status
+        });
+    }, process.env.CONNECTIONS_CLEANUP_INTERVAL || 30000);
+
+    /**
+     * on closing of server destroy
+     * the interval too
+     */
+    wss.on('close', () => {
+        clearInterval(interval);
+    });
+}
+
+
 
 
 module.exports = {
     validateMessage,
     createAcknowledgement,
-    createErrorMessage
+    createErrorMessage,
+    cleanupConnections
 };

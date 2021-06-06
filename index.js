@@ -2,7 +2,7 @@ const debug = require('debug')('message-server:server');
 const http = require('http');
 const express = require("express");
 const WebSocket = require("ws");
-const { validateMessage, createAcknowledgement, createErrorMessage } = require("./utils");
+const { validateMessage, createAcknowledgement, createErrorMessage, cleanupConnections } = require("./utils");
 /**
  * Get port from environment and store in the app.
  */
@@ -57,6 +57,13 @@ wss.on("listening", () => {
 wss.on("close", () => {
     debug("WS Server is closed");
 });
+
+
+/**
+ * Place a proper check and balance on each
+ * connection and destroy the broken connections\
+ */
+cleanupConnections(wss);
 
 /**
  * Listen on provided port, on all network interfaces.
