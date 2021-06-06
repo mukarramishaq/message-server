@@ -28,6 +28,9 @@ wss.on("connection", (socket, request) => {
         const message = JSON.parse(data);
         debug("New Message Received: ", message);
         socket.send("Message Received");
+        wss.clients.forEach((client) => {
+            client.send(data);
+        }); // broadcast to all connected users
     });
     socket.on("error", (err) => {
         debug("An error has occured in the socket: ", err);
