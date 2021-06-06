@@ -1,0 +1,18 @@
+{
+  "name": "message-server",
+  "version": "1.0.0",
+  "description": "A realtime message server",
+  "main": "index.js",
+  "repository": "git@github.com:mukarramishaq/message-server.git",
+  "author": "Mukarram Ishaq <mukarramishaq189@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "node ./index"
+  },
+  "dependencies": {
+    "debug": "^4.3.1",
+    "express": "^4.17.1",
+    "ws": "^7.4.6"
+  }
+}
