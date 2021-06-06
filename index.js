@@ -2,7 +2,7 @@ const debug = require('debug')('message-server:server');
 const http = require('http');
 const express = require("express");
 const WebSocket = require("ws");
-
+const { validateMessage, createAcknowledgement, createErrorMessage } = require("./utils");
 /**
  * Get port from environment and store in the app.
  */
@@ -20,17 +20,23 @@ app.get('/', (req, res) => res.json({ "hello": "hi" }));
 /**
  * Create a Websocket Server for realtime messaging
  */
-const wss = new WebSocket.Server({server});
+const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (socket, request) => {
     debug("A new connection established. yayyy!!!");
     socket.on("message", (data) => {
-        const message = JSON.parse(data);
-        debug("New Message Received: ", message);
-        socket.send("Message Received");
-        wss.clients.forEach((client) => {
-            client.send(data);
-        }); // broadcast to all connected users
+        try {
+            const message = JSON.parse(data);
+            debug("New Message Received: ", message);
+            validateMessage(message);
+            socket.send(JSON.stringify(createAcknowledgement(message)));
+            wss.clients.forEach((client) => {
+                client.send(data);
+            }); // broadcast to all connected users
+        } catch (err) {
+            debug("An Error has occurred on message: ", err);
+            socket.send(JSON.stringify(createErrorMessage(data, err)));
+        }
     });
     socket.on("error", (err) => {
         debug("An error has occured in the socket: ", err);
