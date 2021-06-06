@@ -1,4 +1,7 @@
+const debug = require('debug')('message-server:server');
 const { MESSAGE_TYPES } = require("./constants");
+const WebSocket = require("ws");
+
 /**
  * It will validate all incoming and outgoing
  * messages and will throw error on failure
@@ -89,11 +92,32 @@ const cleanupConnections = (wss) => {
     });
 }
 
-
+/**
+ * This will authenticate each and every
+ * websocket connection before completing
+ * the handshake
+ * @param {any} request 
+ */
 const authenticate = async (request) => {
     //logic to authenticate
     //on failure to authenticate throw errors
     return request;
+}
+
+/**
+ * it will broadcast the message to their
+ * respective users
+ * @param {WebSocket.Server} wss 
+ * @param {Object} message 
+ */
+const broadcast = (wss, ws, message) => {
+    //for the time being broadcast for
+    //all connected users
+    wss.clients.forEach((client) => {
+        if (ws !== client && client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(message));
+        }
+    });
 }
 
 
@@ -104,5 +128,6 @@ module.exports = {
     createAcknowledgement,
     createErrorMessage,
     cleanupConnections,
-    authenticate
+    authenticate,
+    broadcast
 };

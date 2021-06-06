@@ -2,7 +2,14 @@ const debug = require('debug')('message-server:server');
 const http = require('http');
 const express = require("express");
 const WebSocket = require("ws");
-const { validateMessage, createAcknowledgement, createErrorMessage, cleanupConnections, authenticate } = require("./utils");
+const {
+    validateMessage,
+    createAcknowledgement,
+    createErrorMessage,
+    cleanupConnections,
+    authenticate,
+    broadcast
+} = require("./utils");
 /**
  * Get port from environment and store in the app.
  */
@@ -29,10 +36,12 @@ wss.on("connection", (socket, request) => {
             const message = JSON.parse(data);
             debug("New Message Received: ", message);
             validateMessage(message);
-            socket.send(JSON.stringify(createAcknowledgement(message)));
-            wss.clients.forEach((client) => {
-                client.send(data);
-            }); // broadcast to all connected users
+            broadcast(wss, socket, message);
+            socket.send(
+                JSON.stringify(
+                    createAcknowledgement(message)
+                )
+            ); //send back acknowlegdement message
         } catch (err) {
             debug("An Error has occurred on message: ", err);
             socket.send(JSON.stringify(createErrorMessage(data, err)));
