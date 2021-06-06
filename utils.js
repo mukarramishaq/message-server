@@ -90,11 +90,19 @@ const cleanupConnections = (wss) => {
 }
 
 
+const authenticate = async (request) => {
+    //logic to authenticate
+    //on failure to authenticate throw errors
+    return request;
+}
+
+
 
 
 module.exports = {
     validateMessage,
     createAcknowledgement,
     createErrorMessage,
-    cleanupConnections
+    cleanupConnections,
+    authenticate
 };

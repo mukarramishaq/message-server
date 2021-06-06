@@ -2,7 +2,7 @@ const debug = require('debug')('message-server:server');
 const http = require('http');
 const express = require("express");
 const WebSocket = require("ws");
-const { validateMessage, createAcknowledgement, createErrorMessage, cleanupConnections } = require("./utils");
+const { validateMessage, createAcknowledgement, createErrorMessage, cleanupConnections, authenticate } = require("./utils");
 /**
  * Get port from environment and store in the app.
  */
@@ -20,7 +20,7 @@ app.get('/', (req, res) => res.json({ "hello": "hi" }));
 /**
  * Create a Websocket Server for realtime messaging
  */
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ noServer: true });
 
 wss.on("connection", (socket, request) => {
     debug("A new connection established. yayyy!!!");
@@ -64,6 +64,24 @@ wss.on("close", () => {
  * connection and destroy the broken connections\
  */
 cleanupConnections(wss);
+
+
+
+/**
+ * validate the connection request and any
+ * other processing like rerouting
+ */
+server.on('upgrade', (request, socket, head) => {
+    authenticate(request).then(() => {
+        wss.handleUpgrade(request, socket, head, function done(ws) {
+            wss.emit('connection', ws, request);
+        });
+    }).catch((err) => {
+        debug("Authentication Failed: ", err);
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+        socket.destroy();
+    });
+});
 
 /**
  * Listen on provided port, on all network interfaces.
