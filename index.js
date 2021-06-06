@@ -24,6 +24,17 @@ const wss = new WebSocket.Server({server});
 
 wss.on("connection", (socket, request) => {
     debug("A new connection established. yayyy!!!");
+    socket.on("message", (data) => {
+        const message = JSON.parse(data);
+        debug("New Message Received: ", message);
+        socket.send("Message Received");
+    });
+    socket.on("error", (err) => {
+        debug("An error has occured in the socket: ", err);
+    });
+    socket.on("close", (code, reason) => {
+        debug(`Socket is closed: `, code, reason);
+    });
 });
 wss.on("error", (err) => {
     debug("An error has occurred in WS Server: ", err);
